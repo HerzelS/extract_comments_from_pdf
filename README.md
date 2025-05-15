@@ -49,8 +49,8 @@ def extract_comments_to_word(pdf_path, word_output_path):
 ## Notes
 
 * Only highlight annotations are currently supported for extracting the comment scope.
-* Paragraph information is marked as "N/A" since it's not natively tracked in PDFs.
-* The table includes a "Team Response" column for later collaboration or review.
+* Paragraph information is marked as `N/A` since it's not natively tracked in PDFs.
+* The table includes a `Team Response` column for later collaboration or review.
 
 ## License
 
