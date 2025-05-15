@@ -56,9 +56,4 @@ def extract_comments_to_word(pdf_path, word_output_path):
 
 ### MIT License
 
----
-
-Let me know if you’d like to include a sample image, credits, or expand this into a full package with CLI support.
-```
-
 
