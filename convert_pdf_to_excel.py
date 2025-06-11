@@ -1,9 +1,17 @@
 import os
+import time
 import pdfplumber
 from openpyxl import Workbook
 
+
+# Number of reports extrated
+n_reports = 0
+
+# Start the timer
+start_time = time.time()
+
 # Set your directory containing the PDF files
-pdf_folder = "C:\Users\MUKANDI\OneDrive - UNHCR\Desktop\pdfs"
+pdf_folder = "pdfs"
 output_excel = "pdf_texts.xlsx"
 
 # Create a new Excel workbook
@@ -29,8 +37,17 @@ for filename in os.listdir(pdf_folder):
         # Split the text into lines and write to Excel
         for i, line in enumerate(text.splitlines(), start=1):
             ws.cell(row=i, column=1, value=line)
+            
+        # Increment the report count
+        n_reports += 1
+        print(f"A total of {n_reports} extracted from pdf to excel.")
 
 # Save the workbook
 wb.save(output_excel)
 
+# End the timer
+end_time = time.time()
+elapsed_time = end_time - start_time
+
 print(f"Text from PDFs saved to {output_excel}")
+print(f"Process completed in {elapsed_time:.2f} seconds.")
