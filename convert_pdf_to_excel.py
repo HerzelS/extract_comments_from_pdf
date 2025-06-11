@@ -16,6 +16,7 @@ output_excel = "pdf_texts.xlsx"
 
 # Create a new Excel workbook
 wb = Workbook()
+
 # Remove the default sheet
 wb.remove(wb.active)
 
@@ -47,7 +48,7 @@ wb.save(output_excel)
 
 # End the timer
 end_time = time.time()
-elapsed_time = end_time - start_time
+elapsed_time = (end_time - start_time)/60
 
 print(f"Text from PDFs saved to {output_excel}")
-print(f"Process completed in {elapsed_time:.2f} seconds.")
+print(f"Process completed in {elapsed_time:.2f} minutes.")
