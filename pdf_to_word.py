@@ -101,4 +101,4 @@ def convert_numbered_paragraph_pdfs_to_word(pdf_folder, output_folder):
 
 
 # Example usage:
-convert_numbered_paragraph_pdfs_to_word(pdf_folder="test_pdf", output_folder="word_outputs")
+convert_numbered_paragraph_pdfs_to_word(pdf_folder="pdfs", output_folder="word_outputs")
