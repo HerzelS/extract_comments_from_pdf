@@ -4,41 +4,45 @@ import re
 import pdfplumber
 from docx import Document
 
-
 def fix_split_number_lines(text):
     """
-    Fix lines that contain only digits and are followed by numbered paragraphs.
-    Converts sequences like:
-    8\n9. Some text...
-    Into:
-    89. Some text...
+    Fix lines that contain only digits and are followed by a numbered paragraph (like '6\\n7.').
+    Merges them into one line (e.g. '67.') before cleaning and paragraph splitting.
     """
     lines = text.splitlines()
     cleaned_lines = []
-    skip_next = False
+    i = 0
 
-    for i in range(len(lines)):
-        if skip_next:
-            skip_next = False
-            continue
-
-        current_line = lines[i].strip()
-
-        # Check if current line is only a digit
-        if current_line.isdigit() and i + 1 < len(lines):
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.isdigit() and i + 1 < len(lines):
             next_line = lines[i + 1].strip()
-
-            # If the next line starts with a number and a period (e.g. 9.), join them
-            if re.match(r'^\d+\.', next_line):
-                combined_line = current_line + next_line
-                cleaned_lines.append(combined_line)
-                skip_next = True
-            else:
-                cleaned_lines.append(current_line)
-        else:
-            cleaned_lines.append(current_line)
+            match = re.match(r'^(\d+)\.(.*)', next_line)
+            if match:
+                # Merge: "3" and "6. Some text" → "36. Some text"
+                merged_line = line + match.group(1) + "." + match.group(2)
+                cleaned_lines.append(merged_line.strip())
+                i += 2
+                continue
+        cleaned_lines.append(line)
+        i += 1
 
     return '\n'.join(cleaned_lines)
+
+
+def clean_text(raw_text):
+    """
+    Remove control characters and normalize whitespace.
+    """
+    raw_text = re.sub(r'[\x00-\x1F\x7F]', ' ', raw_text)
+    return re.sub(r'\s+', ' ', raw_text).strip()
+
+
+def split_paragraphs(text):
+    """
+    Split text into numbered paragraphs like '21. ...', '22. ...'
+    """
+    return re.split(r'(?=\b\d{1,3}\.\s)', text)
 
 
 def convert_numbered_paragraph_pdfs_to_word(pdf_folder, output_folder):
@@ -63,24 +67,23 @@ def convert_numbered_paragraph_pdfs_to_word(pdf_folder, output_folder):
                     if page_text:
                         text += page_text + "\n"
 
-            # First fix isolated digit line breaks (e.g. "8\n9." → "89.")
+            # Step 1: Fix digit-line splits (e.g., "3\n6." → "36.")
             text = fix_split_number_lines(text)
 
-            # Fix broken paragraph numbers spanning 3 digits split over lines (e.g., "1\n1\n9." → "119.")
+            # Step 2: Fix additional split number patterns like "1\n2." or "1\n1\n9."
             text = re.sub(r'(?:\n)?(?<!\d)(\d)\n(\d)\n(\d)\.', r'\1\2\3.', text)
-            # Fix broken paragraph numbers spanning 2 digits split over lines (e.g., "1\n2." → "12.")
             text = re.sub(r'(?:\n)?(?<!\d)(\d)\n(\d)\.', r'\1\2.', text)
 
-            # Merge all line breaks that are NOT paragraph breaks (paragraph breaks expected before a number + period)
+            # Step 3: Merge line breaks into spaces
             text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
 
-            # Normalize spaces and tabs
-            text = re.sub(r'[ \t]+', ' ', text)
+            # Step 4: Normalize whitespace and control characters
+            cleaned_text = clean_text(text)
 
-            # Split into paragraphs by paragraph numbers like "67."
-            paragraphs = re.split(r'(?=\n?\d{1,3}\.\s)', text)
+            # Step 5: Split clean text into paragraphs
+            paragraphs = split_paragraphs(cleaned_text)
 
-            # Create Word document and write paragraphs
+            # Step 6: Write to Word
             doc = Document()
             for para in paragraphs:
                 clean_para = para.strip()
